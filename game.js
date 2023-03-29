@@ -252,6 +252,11 @@ function updateGame() {
     // Add these lines to draw and update the fence
     fence.moveDown(2); // Change this value to control the fence scrolling speed
     fence.draw();
+
+    // Add this line to check for fence collision
+    if (fence.checkCollision({ x: bicycleX, y: bicycleY, width: bicycleWidth, height: bicycleHeight })) {
+        gameOver();
+    }
 }
 
 

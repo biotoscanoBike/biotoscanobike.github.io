@@ -3,7 +3,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #b3d9ff;
+    background: linear-gradient(hsl(155, 100%, 85%),#b3d4ff);
     width: 100vw;
     height: 100vh;
     overflow: hidden;
@@ -16,6 +16,7 @@ body {
     transform: translateX(-50%);
     font-size: 35px;
     font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
     color: navy;
     background-color: white;
     padding: 0.3rem 0.6rem;
