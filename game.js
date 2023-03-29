@@ -208,7 +208,7 @@ const lane = new Lane(canvas, ctx, laneWidth);
 // Create a Fence instance
 const entranceWidth = 200;
 const entranceOffset = 100;
-const 0fence = new Fence(canvas, ctx, lane, entranceWidth, entranceOffset);
+const fence = new Fence(canvas, ctx, lane, entranceWidth, entranceOffset);
 
 function updateGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
