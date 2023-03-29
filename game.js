@@ -34,25 +34,80 @@ function updateTimer() {
     elapsedTime++;
 }
 
+class Bicycle {
+    constructor(x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.speedX = 0;
+    }
+
+    draw(ctx) {
+        ctx.fillStyle = this.getColor();
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    getColor() {
+        const yPos = 2 * canvas.height / 3; // Use a fixed Y position for calculations
+        const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
+
+        if (this.x + this.width < laneLeftEdge) {
+            return 'blue';
+        } else if (this.x > laneRightEdge) {
+            return 'red';
+        } else {
+            return 'yellow';
+        }
+    }
+
+    updatePosition(accel, laneLeftEdge, laneRightEdge) {
+        const outsideLeft = this.x < laneLeftEdge;
+        const outsideRight = this.x + this.width > laneRightEdge;
+
+        if (outsideLeft) {
+            this.speedX += rightForce; // Accelerate to the right
+        } else if (outsideRight) {
+            this.speedX += leftForce; // Accelerate to the left
+        } else { }
+
+        this.x -= this.speedX;
+    }
+
+    reset(x, y) {
+        this.x = x;
+        this.y = y;
+        this.speedX = 0;
+    }
+}
+
+const bicycle = new Bicycle(bicycleX, bicycleY, bicycleWidth, bicycleHeight);
+
 function updateBicyclePosition() {
     const yPos = 2 * canvas.height / 3;
     const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
-
-    const outsideLeft = bicycleX < laneLeftEdge;
-    const outsideRight = bicycleX + bicycleWidth > laneRightEdge;
-
-    if (outsideLeft) {
-        speedX += rightForce; // Accelerate to the right
-    } else if (outsideRight) {
-        speedX += leftForce; // Accelerate to the left
-    } else { }
-
-    bicycleX += -speedX;
+    bicycle.updatePosition(accel, laneLeftEdge, laneRightEdge);
 }
+
+// function updateBicyclePosition() {
+//     const yPos = 2 * canvas.height / 3;
+//     const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
+
+//     const outsideLeft = bicycleX < laneLeftEdge;
+//     const outsideRight = bicycleX + bicycleWidth > laneRightEdge;
+
+//     if (outsideLeft) {
+//         speedX += rightForce; // Accelerate to the right
+//     } else if (outsideRight) {
+//         speedX += leftForce; // Accelerate to the left
+//     } else { }
+
+//     bicycleX += -speedX;
+// }
 
 
 function checkCollision() {
-    if (bicycleX <= 0 || bicycleX + bicycleWidth >= canvas.width) {
+    if (bicycle.x <= 0 || bicycle.x + bicycle.width >= canvas.width) {
         gameOver();
     }
 }
@@ -78,12 +133,13 @@ document.getElementById('resetButton').addEventListener('click', () => {
 function resetGame() {
     const gameOverModal = document.getElementById('gameOverModal');
     gameOverModal.style.display = 'none';
-    bicycleX = canvas.width / 2 - bicycleWidth / 2;
-    speedX = 0;
+    bicycle.reset(canvas.width / 2 - bicycle.width / 2, 2 * canvas.height / 3 - bicycle.height / 2);
     lane.reset();
     fence.reset();
+    elapsedTime = 0;
     startGame();
 }
+
 
 
 function gameOver() {
@@ -98,171 +154,6 @@ function gameOver() {
 }
 
 let laneOffsetY = 0;
-
-class Lane {
-    constructor(canvas, ctx, laneWidth) {
-        this.canvas = canvas;
-        this.ctx = ctx;
-        this.laneWidth = laneWidth;
-        this.laneOffsetY = 0;
-
-        this.amplitude = 70;
-        this.numPeriods = 2;
-        this.frequency = (2 * Math.PI) / (canvas.height / this.numPeriods);
-
-        this.offscreenCanvas = document.createElement('canvas');
-        this.offscreenCanvas.width = canvas.width;
-        this.offscreenCanvas.height = canvas.height;
-        this.offscreenCtx = this.offscreenCanvas.getContext('2d');
-
-        this.createLaneImage();
-    }
-
-    reset() {
-        this.laneOffsetY = 0;
-    }
-
-    translateY(dy) {
-        this.laneOffsetY += dy;
-        if (this.laneOffsetY >= this.canvas.height) {
-            this.laneOffsetY -= this.canvas.height;
-        }
-    }
-
-    getLaneEdgesAtY(y) {
-        const yPos = (y - this.laneOffsetY) % this.canvas.height;
-        const leftEdgeX = (this.canvas.width / 2 - this.laneWidth / 2) + this.amplitude * Math.sin(this.frequency * yPos);
-        const rightEdgeX = (this.canvas.width / 2 + this.laneWidth / 2) + this.amplitude * Math.sin(this.frequency * yPos);
-        return [leftEdgeX, rightEdgeX];
-    }
-
-    createLaneImage() {
-        const amplitude = 70;
-        const numPeriods = 2; // Add this line to set the number of periods
-        const frequency = (2 * Math.PI) / (canvas.height / numPeriods); // Update this line to calculate the frequency
-        const laneHeight = canvas.height;
-        const borderWidth = 3; // Add this line to set the border width
-    
-        this.offscreenCtx.fillStyle = '#ffffff';
-    
-        this.offscreenCtx.beginPath();
-    
-        // Left side of the lane
-        this.offscreenCtx.moveTo(0, 0);
-        for (let y = 0; y <= laneHeight; y++) {
-            const x = (this.canvas.width / 2 - this.laneWidth / 2) + amplitude * Math.sin(frequency * y);
-            this.offscreenCtx.lineTo(x, y);
-        }
-    
-        // Right side of the lane
-        for (let y = laneHeight; y >= 0; y--) {
-            const x = (this.canvas.width / 2 + this.laneWidth / 2) + amplitude * Math.sin(frequency * y);
-            this.offscreenCtx.lineTo(x, y);
-        }
-    
-        this.offscreenCtx.lineTo(this.canvas.width, 0);
-        this.offscreenCtx.closePath();
-        this.offscreenCtx.fill();
-    
-        // Draw the border
-        this.offscreenCtx.strokeStyle = 'lightyellow'; // Set the border color
-        this.offscreenCtx.lineWidth = borderWidth; // Set the border width
-    
-        // Draw the left border
-        this.offscreenCtx.beginPath();
-        this.offscreenCtx.moveTo((this.canvas.width / 2 - this.laneWidth / 2) + amplitude * Math.sin(frequency * 0), 0);
-        for (let y = 1; y <= laneHeight; y++) {
-            const x = (this.canvas.width / 2 - this.laneWidth / 2) + amplitude * Math.sin(frequency * y);
-            this.offscreenCtx.lineTo(x, y);
-        }
-        this.offscreenCtx.stroke();
-    
-        // Draw the right border
-        this.offscreenCtx.beginPath();
-        this.offscreenCtx.moveTo((this.canvas.width / 2 + this.laneWidth / 2) + amplitude * Math.sin(frequency * 0), 0);
-        for (let y = 1; y <= laneHeight; y++) {
-            const x = (this.canvas.width / 2 + this.laneWidth / 2) + amplitude * Math.sin(frequency * y);
-            this.offscreenCtx.lineTo(x, y);
-        }
-        this.offscreenCtx.stroke();
-    }
-    
-
-    draw() {
-        this.ctx.drawImage(this.offscreenCanvas, 0, this.laneOffsetY);
-        this.ctx.drawImage(this.offscreenCanvas, 0, this.laneOffsetY - this.canvas.height);
-    }
-}
-
-class Fence {
-    constructor(canvas, ctx, lane, entranceWidth, entranceOffset) {
-        this.canvas = canvas;
-        this.ctx = ctx;
-        this.lane = lane;
-        this.entranceWidth = entranceWidth;
-        this.entranceOffset = entranceOffset;
-
-        this.height = 10; // The height of the fence
-        this.y = 0; // The initial Y position of the fence, at the end of the Lane instance
-
-        this.calculateEntrancePosition();
-    }
-
-    reset() {
-        this.y = 0;
-        this.calculateEntrancePosition();
-    }
-
-    calculateEntrancePosition() {
-        const yPos = this.canvas.height;
-        const [laneLeftEdge, laneRightEdge] = this.lane.getLaneEdgesAtY(yPos);
-
-        const minEntranceX = laneLeftEdge + this.entranceOffset;
-        const maxEntranceX = laneRightEdge - this.entranceWidth - this.entranceOffset;
-
-        this.entranceX = Math.random() * (maxEntranceX - minEntranceX) + minEntranceX;
-    }
-
-    draw() {
-        this.ctx.fillStyle = 'black';
-
-        // Draw left fence wall
-        this.ctx.fillRect(0, this.y, this.entranceX, this.height);
-
-        // Draw right fence wall
-        const rightFenceStartX = this.entranceX + this.entranceWidth;
-        this.ctx.fillRect(rightFenceStartX, this.y, this.canvas.width - rightFenceStartX, this.height);
-    }
-
-    moveDown(dy) {
-        this.y += dy;
-        if (this.y > this.canvas.height) {
-            this.y = 0;
-            this.calculateEntrancePosition();
-        }
-    }
-
-    checkCollision(bicycle) {
-        const topLeft = { x: bicycle.x, y: bicycle.y };
-        const topRight = { x: bicycle.x + bicycle.width, y: bicycle.y };
-        const bottomLeft = { x: bicycle.x, y: bicycle.y + bicycle.height };
-        const bottomRight = { x: bicycle.x + bicycle.width, y: bicycle.y + bicycle.height };
-    
-        const corners = [topLeft, topRight, bottomLeft, bottomRight];
-    
-        if (this.y <= bicycle.y && this.y + this.height >= bicycle.y) {
-            for (const corner of corners) {
-                if (corner.x < this.entranceX || corner.x > this.entranceX + this.entranceWidth) {
-                    return true;
-                }
-            }
-        }
-    
-        return false;
-    }
-    
-}
-
 
 const lane = new Lane(canvas, ctx, laneWidth);
 
@@ -285,32 +176,36 @@ function updateGame() {
     fence.draw();
 
     // Add this line to check for fence collision
-    if (fence.checkCollision({ x: bicycleX, y: bicycleY, width: bicycleWidth, height: bicycleHeight })) {
+    if (fence.checkCollision({ x: bicycle.x, y: bicycle.y, width: bicycle.width, height: bicycle.height })) {
         gameOver();
     }
 }
 
 
-function getBicycleColor() {
-    const yPos = 2 * canvas.height / 3; // Use a fixed Y position for calculations
-    const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
+// function getBicycleColor() {
+//     const yPos = 2 * canvas.height / 3; // Use a fixed Y position for calculations
+//     const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
 
-    if (bicycleX + bicycleWidth < laneLeftEdge) {
-        return 'blue';
-    } else if (bicycleX > laneRightEdge) {
-        return 'red';
-    } else {
-        return 'yellow';
-    }
-}
-
-
+//     if (bicycleX + bicycleWidth < laneLeftEdge) {
+//         return 'blue';
+//     } else if (bicycleX > laneRightEdge) {
+//         return 'red';
+//     } else {
+//         return 'yellow';
+//     }
+// }
 
 
+
+
+
+// function drawBicycle() {
+//     ctx.fillStyle = getBicycleColor();
+//     ctx.fillRect(bicycleX, bicycleY, bicycleWidth, bicycleHeight);
+// }
 
 function drawBicycle() {
-    ctx.fillStyle = getBicycleColor();
-    ctx.fillRect(bicycleX, bicycleY, bicycleWidth, bicycleHeight);
+    bicycle.draw(ctx);
 }
 
 
@@ -318,9 +213,9 @@ const accel = 1;
 
 function handleInput(direction) {
     if (direction === 'right') {
-        speedX -= accel;
+        bicycle.speedX -= accel;
     } else if (direction === 'left') {
-        speedX += accel;
+        bicycle.speedX += accel;
     }
 }
 
