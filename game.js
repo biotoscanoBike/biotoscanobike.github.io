@@ -65,6 +65,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
     speedX = 0;
     lane.reset(); // Add this line
     fence.reset(); // Add this line
+    elapsedTime = 0; // Add this line
     startGame();
 });
 
