@@ -19,10 +19,16 @@ let elapsedTime = 0;
 let gameInterval;
 let timerInterval;
 
+let isGameRunning = false;
+
 function startGame() {
-    gameInterval = setInterval(updateGame, 20);
-    timerInterval = setInterval(updateTimer, 1000);
+    if (!isGameRunning) {
+        gameInterval = setInterval(updateGame, 20);
+        timerInterval = setInterval(updateTimer, 1000);
+        isGameRunning = true;
+    }
 }
+
 
 function updateTimer() {
     elapsedTime++;
@@ -88,6 +94,7 @@ function gameOver() {
     gameOverMessage.innerText = `You lasted ${elapsedTime} seconds.`;
     gameOverModal.style.display = 'block';
     elapsedTime = 0;
+    isGameRunning = false; // Add this line
 }
 
 let laneOffsetY = 0;
