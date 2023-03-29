@@ -13,7 +13,7 @@ const leftForce = -0.075;
 const rightForce = 0.075;
 let speedX = 0;
 
-const laneWidth = 50; // Add this line
+const laneWidth = bicycleWidth * 3; // Add this line
 
 let elapsedTime = 0;
 let gameInterval;
@@ -63,8 +63,21 @@ document.getElementById('resetButton').addEventListener('click', () => {
     gameOverModal.style.display = 'none';
     bicycleX = canvas.width / 2 - bicycleWidth / 2;
     speedX = 0;
+    lane.reset(); // Add this line
+    fence.reset(); // Add this line
     startGame();
 });
+
+function resetGame() {
+    const gameOverModal = document.getElementById('gameOverModal');
+    gameOverModal.style.display = 'none';
+    bicycleX = canvas.width / 2 - bicycleWidth / 2;
+    speedX = 0;
+    lane.reset();
+    fence.reset();
+    startGame();
+}
+
 
 function gameOver() {
     clearInterval(gameInterval);
@@ -95,6 +108,10 @@ class Lane {
         this.offscreenCtx = this.offscreenCanvas.getContext('2d');
 
         this.createLaneImage();
+    }
+
+    reset() {
+        this.laneOffsetY = 0;
     }
 
     translateY(dy) {
@@ -159,6 +176,11 @@ class Fence {
         this.calculateEntrancePosition();
     }
 
+    reset() {
+        this.y = 0;
+        this.calculateEntrancePosition();
+    }
+
     calculateEntrancePosition() {
         const yPos = this.canvas.height;
         const [laneLeftEdge, laneRightEdge] = this.lane.getLaneEdgesAtY(yPos);
@@ -206,7 +228,7 @@ class Fence {
 const lane = new Lane(canvas, ctx, laneWidth);
 
 // Create a Fence instance
-const entranceWidth = 200;
+const entranceWidth = bicycleWidth * 3;
 const entranceOffset = 100;
 const fence = new Fence(canvas, ctx, lane, entranceWidth, entranceOffset);
 
@@ -277,6 +299,17 @@ document.addEventListener('keydown', (event) => {
         handleInput('left');
     } else if (event.code === 'ArrowRight') {
         handleInput('right');
+    }
+});
+
+document.getElementById('resetButton').addEventListener('click', resetGame);
+
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'Enter') {
+        const gameOverModal = document.getElementById('gameOverModal');
+        if (gameOverModal.style.display === 'block') {
+            resetGame();
+        }
     }
 });
 
