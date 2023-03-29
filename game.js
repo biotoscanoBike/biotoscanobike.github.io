@@ -236,22 +236,16 @@ function updateGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     lane.translateY(2); // Change this value to control the lane scrolling speed
     lane.draw();
-    
-    // Move and draw the fence
-    fence.moveDown(2);
-    fence.draw();
-    
     updateBicyclePosition();
     checkCollision();
-    
-    // Check for collision with the fence
-    if (fence.checkCollision({ x: bicycleX, y: bicycleY, width: bicycleWidth, height: bicycleHeight })) {
-        gameOver();
-    }
-    
     drawBicycle();
-    drawScore(); // Add this line
+    updateScore(); // Replace drawScore() with updateScore()
+
+    // Add these lines to draw and update the fence
+    fence.moveDown(2); // Change this value to control the fence scrolling speed
+    fence.draw();
 }
+
 
 function getBicycleColor() {
     const yPos = 2 * canvas.height / 3; // Use a fixed Y position for calculations
@@ -301,6 +295,11 @@ document.addEventListener('keydown', (event) => {
         handleInput('right');
     }
 });
+
+function updateScore() {
+    const timeStamp = document.getElementById('timeStamp');
+    timeStamp.innerText = `Time: ${elapsedTime}s`;
+}
 
 document.getElementById('resetButton').addEventListener('click', resetGame);
 
