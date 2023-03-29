@@ -141,28 +141,52 @@ class Lane {
         const numPeriods = 2; // Add this line to set the number of periods
         const frequency = (2 * Math.PI) / (canvas.height / numPeriods); // Update this line to calculate the frequency
         const laneHeight = canvas.height;
-
+        const borderWidth = 3; // Add this line to set the border width
+    
         this.offscreenCtx.fillStyle = '#ffffff';
-
+    
         this.offscreenCtx.beginPath();
-
+    
         // Left side of the lane
         this.offscreenCtx.moveTo(0, 0);
         for (let y = 0; y <= laneHeight; y++) {
             const x = (this.canvas.width / 2 - this.laneWidth / 2) + amplitude * Math.sin(frequency * y);
             this.offscreenCtx.lineTo(x, y);
         }
-
+    
         // Right side of the lane
         for (let y = laneHeight; y >= 0; y--) {
             const x = (this.canvas.width / 2 + this.laneWidth / 2) + amplitude * Math.sin(frequency * y);
             this.offscreenCtx.lineTo(x, y);
         }
-
+    
         this.offscreenCtx.lineTo(this.canvas.width, 0);
         this.offscreenCtx.closePath();
         this.offscreenCtx.fill();
+    
+        // Draw the border
+        this.offscreenCtx.strokeStyle = 'lightyellow'; // Set the border color
+        this.offscreenCtx.lineWidth = borderWidth; // Set the border width
+    
+        // Draw the left border
+        this.offscreenCtx.beginPath();
+        this.offscreenCtx.moveTo((this.canvas.width / 2 - this.laneWidth / 2) + amplitude * Math.sin(frequency * 0), 0);
+        for (let y = 1; y <= laneHeight; y++) {
+            const x = (this.canvas.width / 2 - this.laneWidth / 2) + amplitude * Math.sin(frequency * y);
+            this.offscreenCtx.lineTo(x, y);
+        }
+        this.offscreenCtx.stroke();
+    
+        // Draw the right border
+        this.offscreenCtx.beginPath();
+        this.offscreenCtx.moveTo((this.canvas.width / 2 + this.laneWidth / 2) + amplitude * Math.sin(frequency * 0), 0);
+        for (let y = 1; y <= laneHeight; y++) {
+            const x = (this.canvas.width / 2 + this.laneWidth / 2) + amplitude * Math.sin(frequency * y);
+            this.offscreenCtx.lineTo(x, y);
+        }
+        this.offscreenCtx.stroke();
     }
+    
 
     draw() {
         this.ctx.drawImage(this.offscreenCanvas, 0, this.laneOffsetY);
@@ -219,24 +243,31 @@ class Fence {
     }
 
     checkCollision(bicycle) {
-        const bicycleCenterX = bicycle.x + bicycle.width / 2;
-        const bicycleCenterY = bicycle.y + bicycle.height / 2;
-
-        if (bicycleCenterY >= this.y && bicycleCenterY <= this.y + this.height) {
-            if (bicycleCenterX < this.entranceX || bicycleCenterX > this.entranceX + this.entranceWidth) {
-                return true;
+        const topLeft = { x: bicycle.x, y: bicycle.y };
+        const topRight = { x: bicycle.x + bicycle.width, y: bicycle.y };
+        const bottomLeft = { x: bicycle.x, y: bicycle.y + bicycle.height };
+        const bottomRight = { x: bicycle.x + bicycle.width, y: bicycle.y + bicycle.height };
+    
+        const corners = [topLeft, topRight, bottomLeft, bottomRight];
+    
+        if (this.y <= bicycle.y && this.y + this.height >= bicycle.y) {
+            for (const corner of corners) {
+                if (corner.x < this.entranceX || corner.x > this.entranceX + this.entranceWidth) {
+                    return true;
+                }
             }
         }
-
+    
         return false;
     }
+    
 }
 
 
 const lane = new Lane(canvas, ctx, laneWidth);
 
 // Create a Fence instance
-const entranceWidth = bicycleWidth * 3;
+const entranceWidth = bicycleWidth * 4.5;
 const entranceOffset = 100;
 const fence = new Fence(canvas, ctx, lane, entranceWidth, entranceOffset);
 
