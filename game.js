@@ -24,17 +24,9 @@ function startGame() {
     timerInterval = setInterval(updateTimer, 1000);
 }
 
-
-
-
 function updateTimer() {
     elapsedTime++;
 }
-
-// function updateBicyclePosition() {
-//     speedX += (bicycleX < canvas.width / 2) ? -rightForce : -leftForce;
-//     bicycleX += speedX;
-// }
 
 function updateBicyclePosition() {
     const yPos = 2 * canvas.height / 3;
@@ -47,22 +39,10 @@ function updateBicyclePosition() {
         speedX += rightForce; // Accelerate to the right
     } else if (outsideRight) {
         speedX += leftForce; // Accelerate to the left
-    } else {
-        // // Calculate the distance from the center of the lane
-        // const laneCenter = (laneLeftEdge + laneRightEdge) / 2;
-        // const distanceFromCenter = bicycleX - laneCenter;
-
-        // // Use the distance from the center to adjust the speed
-        // if (distanceFromCenter < 0) {
-        //     speedX += rightForce;
-        // } else {
-        //     speedX += leftForce;
-        // }
-    }
+    } else {}
 
     bicycleX += -speedX;
 }
-
 
 
 function checkCollision() {
@@ -77,15 +57,6 @@ function drawScore() {
     ctx.fillText(`Time: ${elapsedTime}s`, canvas.width / 2, 30);
 }
 
-// function gameOver() {
-//     clearInterval(gameInterval);
-//     clearInterval(timerInterval);
-//     alert(`Game Over! You lasted ${elapsedTime} seconds.`);
-//     elapsedTime = 0;
-//     bicycleX = canvas.width / 2 - bicycleWidth / 2;
-//     speedX = 0;
-//     startGame();
-// }
 
 document.getElementById('resetButton').addEventListener('click', () => {
     const gameOverModal = document.getElementById('gameOverModal');
@@ -208,10 +179,6 @@ function drawBicycle() {
     ctx.fillRect(bicycleX, bicycleY, bicycleWidth, bicycleHeight);
 }
 
-// function drawBicycle() {
-//     ctx.fillStyle = 'black';
-//     ctx.fillRect(bicycleX, bicycleY, bicycleWidth, bicycleHeight);
-// }
 
 const accel = 1;
 
