@@ -39,7 +39,7 @@ function updateBicyclePosition() {
         speedX += rightForce; // Accelerate to the right
     } else if (outsideRight) {
         speedX += leftForce; // Accelerate to the left
-    } else {}
+    } else { }
 
     bicycleX += -speedX;
 }
@@ -145,14 +145,88 @@ class Lane {
     }
 }
 
+class Fence {
+    constructor(canvas, ctx, lane, entranceWidth, entranceOffset) {
+        this.canvas = canvas;
+        this.ctx = ctx;
+        this.lane = lane;
+        this.entranceWidth = entranceWidth;
+        this.entranceOffset = entranceOffset;
+
+        this.height = 10; // The height of the fence
+        this.y = 0; // The initial Y position of the fence, at the end of the Lane instance
+
+        this.calculateEntrancePosition();
+    }
+
+    calculateEntrancePosition() {
+        const yPos = this.canvas.height;
+        const [laneLeftEdge, laneRightEdge] = this.lane.getLaneEdgesAtY(yPos);
+
+        const minEntranceX = laneLeftEdge + this.entranceOffset;
+        const maxEntranceX = laneRightEdge - this.entranceWidth - this.entranceOffset;
+
+        this.entranceX = Math.random() * (maxEntranceX - minEntranceX) + minEntranceX;
+    }
+
+    draw() {
+        this.ctx.fillStyle = 'black';
+
+        // Draw left fence wall
+        this.ctx.fillRect(0, this.y, this.entranceX, this.height);
+
+        // Draw right fence wall
+        const rightFenceStartX = this.entranceX + this.entranceWidth;
+        this.ctx.fillRect(rightFenceStartX, this.y, this.canvas.width - rightFenceStartX, this.height);
+    }
+
+    moveDown(dy) {
+        this.y += dy;
+        if (this.y > this.canvas.height) {
+            this.y = 0;
+            this.calculateEntrancePosition();
+        }
+    }
+
+    checkCollision(bicycle) {
+        const bicycleCenterX = bicycle.x + bicycle.width / 2;
+        const bicycleCenterY = bicycle.y + bicycle.height / 2;
+
+        if (bicycleCenterY >= this.y && bicycleCenterY <= this.y + this.height) {
+            if (bicycleCenterX < this.entranceX || bicycleCenterX > this.entranceX + this.entranceWidth) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+
 const lane = new Lane(canvas, ctx, laneWidth);
+
+// Create a Fence instance
+const entranceWidth = 200;
+const entranceOffset = 100;
+const 0fence = new Fence(canvas, ctx, lane, entranceWidth, entranceOffset);
 
 function updateGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     lane.translateY(2); // Change this value to control the lane scrolling speed
     lane.draw();
+    
+    // Move and draw the fence
+    fence.moveDown(2);
+    fence.draw();
+    
     updateBicyclePosition();
     checkCollision();
+    
+    // Check for collision with the fence
+    if (fence.checkCollision({ x: bicycleX, y: bicycleY, width: bicycleWidth, height: bicycleHeight })) {
+        gameOver();
+    }
+    
     drawBicycle();
     drawScore(); // Add this line
 }
