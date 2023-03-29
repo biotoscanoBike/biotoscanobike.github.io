@@ -23,62 +23,15 @@ let isGameRunning = false;
 
 function startGame() {
     if (!isGameRunning) {
+        document.getElementById('timeStamp').style.display = 'block';
         gameInterval = setInterval(updateGame, 20);
         timerInterval = setInterval(updateTimer, 1000);
         isGameRunning = true;
     }
 }
 
-
 function updateTimer() {
     elapsedTime++;
-}
-
-class Bicycle {
-    constructor(x, y, width, height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.speedX = 0;
-    }
-
-    draw(ctx) {
-        ctx.fillStyle = this.getColor();
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
-
-    getColor() {
-        const yPos = 2 * canvas.height / 3; // Use a fixed Y position for calculations
-        const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
-
-        if (this.x + this.width < laneLeftEdge) {
-            return 'blue';
-        } else if (this.x > laneRightEdge) {
-            return 'red';
-        } else {
-            return 'yellow';
-        }
-    }
-
-    updatePosition(accel, laneLeftEdge, laneRightEdge) {
-        const outsideLeft = this.x < laneLeftEdge;
-        const outsideRight = this.x + this.width > laneRightEdge;
-
-        if (outsideLeft) {
-            this.speedX += rightForce; // Accelerate to the right
-        } else if (outsideRight) {
-            this.speedX += leftForce; // Accelerate to the left
-        } else { }
-
-        this.x -= this.speedX;
-    }
-
-    reset(x, y) {
-        this.x = x;
-        this.y = y;
-        this.speedX = 0;
-    }
 }
 
 const bicycle = new Bicycle(bicycleX, bicycleY, bicycleWidth, bicycleHeight);
@@ -88,23 +41,6 @@ function updateBicyclePosition() {
     const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
     bicycle.updatePosition(accel, laneLeftEdge, laneRightEdge);
 }
-
-// function updateBicyclePosition() {
-//     const yPos = 2 * canvas.height / 3;
-//     const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
-
-//     const outsideLeft = bicycleX < laneLeftEdge;
-//     const outsideRight = bicycleX + bicycleWidth > laneRightEdge;
-
-//     if (outsideLeft) {
-//         speedX += rightForce; // Accelerate to the right
-//     } else if (outsideRight) {
-//         speedX += leftForce; // Accelerate to the left
-//     } else { }
-
-//     bicycleX += -speedX;
-// }
-
 
 function checkCollision() {
     if (bicycle.x <= 0 || bicycle.x + bicycle.width >= canvas.width) {
@@ -139,8 +75,6 @@ function resetGame() {
     elapsedTime = 0;
     startGame();
 }
-
-
 
 function gameOver() {
     clearInterval(gameInterval);
@@ -180,29 +114,6 @@ function updateGame() {
         gameOver();
     }
 }
-
-
-// function getBicycleColor() {
-//     const yPos = 2 * canvas.height / 3; // Use a fixed Y position for calculations
-//     const [laneLeftEdge, laneRightEdge] = lane.getLaneEdgesAtY(yPos);
-
-//     if (bicycleX + bicycleWidth < laneLeftEdge) {
-//         return 'blue';
-//     } else if (bicycleX > laneRightEdge) {
-//         return 'red';
-//     } else {
-//         return 'yellow';
-//     }
-// }
-
-
-
-
-
-// function drawBicycle() {
-//     ctx.fillStyle = getBicycleColor();
-//     ctx.fillRect(bicycleX, bicycleY, bicycleWidth, bicycleHeight);
-// }
 
 function drawBicycle() {
     bicycle.draw(ctx);
@@ -251,5 +162,30 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'Enter') {
+        const landingModal = document.getElementById('landingModal');
+        if (landingModal.style.display === 'block') {
+            hideLandingModal();
+            startGame();
+        }
+    }
+});
 
-startGame();
+function showLandingModal() {
+    const landingModal = document.getElementById('landingModal');
+    landingModal.style.display = 'block';
+}
+
+function hideLandingModal() {
+    const landingModal = document.getElementById('landingModal');
+    landingModal.style.display = 'none';
+}
+
+document.getElementById('startButton').addEventListener('click', () => {
+    hideLandingModal();
+    startGame();
+});
+
+
+showLandingModal();

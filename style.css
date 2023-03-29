@@ -3,13 +3,14 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(hsl(155, 100%, 85%),#b3d4ff);
+    background: linear-gradient(hsl(155, 100%, 85%), #b3d4ff);
     width: 100vw;
     height: 100vh;
     overflow: hidden;
 }
 
 #timeStamp {
+    display: none;
     position: absolute;
     top: 10px;
     left: 50%;
@@ -40,7 +41,7 @@ canvas {
     height: 100%;
 }
 
-.modal {
+#gameOverModal {
     display: none;
     position: fixed;
     z-index: 1;
@@ -50,7 +51,7 @@ canvas {
     background-color: rgba(0, 0, 0, 0.4);
 }
 
-.modal-content {
+#gameOverModal .modal-content {
     font-family: Arial, Helvetica, sans-serif;
     position: absolute;
     transform: translate(-50%, -50%);
@@ -67,7 +68,7 @@ canvas {
     font-size: 1.5rem;
 }
 
-#resetButton {
+button {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 1.5rem;
     font-weight: bold;
@@ -79,4 +80,39 @@ canvas {
     box-shadow: 10px 10px 0 blueviolet;
     cursor: pointer;
     margin-top: 1rem;
+}
+
+/*  LANDING BANNER */
+
+#landingModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+#landingModal .modal-content {
+    font-family: Arial, Helvetica, sans-serif;
+    position: absolute;
+    left: 2rem;
+    top: 2rem;
+    right: 2rem;
+    bottom: 2rem;
+    background-color: white;
+    padding: 1rem 1rem;
+    border: 3px solid navy;
+    border-radius: 0.4rem;
+    box-shadow: 10px 10px 0 blueviolet;
+    text-align: center;
+    color: navy;
+    overflow: auto;
+}
+
+#landingModal .modal-content p,
+#landingModal .modal-content ul {
+    font-size: 2rem;
 }

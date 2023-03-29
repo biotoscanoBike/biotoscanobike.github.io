@@ -9,12 +9,12 @@
 </head>
 
 <body>
-    
+
 
     <!-- <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
     </div> -->
-    
+
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         <div id="timeStamp"></div>
@@ -27,8 +27,24 @@
             <button id="resetButton">Play Again</button>
         </div>
     </div>
+
+    <div id="landingModal" class="modal">
+        <div class="modal-content">
+            <h2>Welcome to the Bicycle Game!</h2>
+            <p>Here's how to play:</p>
+            <ul>
+                <li>Keep the bicycle within the lane.</li>
+                <li>Use the left and right arrow keys or touch the screen to control the bicycle.</li>
+                <li>Avoid colliding with the fences.</li>
+            </ul>
+            <button id="startButton">Start Playing</button>
+        </div>
+    </div>
+
+
     <script src="lane.js"></script>
     <script src="fence.js"></script>
+    <script src="bicycle.js"></script>
     <script src="game.js"></script>
 </body>
 
