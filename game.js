@@ -1,93 +1,4 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = 800;
-canvas.height = 600;
 
-const z_near = 10;
-const f = 200;
-const amplitude = 100;
-const frequency = 0.05;
-const laneWidth_world = 50;
-let z_offset = 0;
-const speed = 0.5;
-const y_bicycle = canvas.height * 0.8;
-let x_bicycle = canvas.width / 2;
-
-const fences = Array.from({ length: 20 }, (_, i) => ({
-  z_fence: i * 50,
-  entranceWidth_world: 40
-}));
-
-function drawLane() {
-  ctx.beginPath();
-  const left_points = [];
-  const right_points = [];
-  for (let y = 1; y <= canvas.height; y++) {
-    const z = (z_near * canvas.height) / y + z_offset;
-    const x_center_world = amplitude * Math.sin(frequency * z);
-    const x_left_world = x_center_world - laneWidth_world / 2;
-    const x_right_world = x_center_world + laneWidth_world / 2;
-    const x_left_screen = canvas.width / 2 + f * x_left_world / z;
-    const x_right_screen = canvas.width / 2 + f * x_right_world / z;
-    left_points.push([x_left_screen, y]);
-    right_points.push([x_right_screen, y]);
-  }
-  ctx.moveTo(...left_points[0]);
-  left_points.forEach(p => ctx.lineTo(...p));
-  for (let i = right_points.length - 1; i >= 0; i--) ctx.lineTo(...right_points[i]);
-  ctx.closePath();
-  ctx.fillStyle = 'gray';
-  ctx.fill();
-}
-
-function drawFences() {
-  fences.forEach(fence => {
-    const z_relative = fence.z_fence - z_offset;
-    if (z_relative < z_near) return;
-    const y_screen = (z_near * canvas.height) / z_relative;
-    if (y_screen > 0 && y_screen < canvas.height) {
-      const x_center_world = amplitude * Math.sin(frequency * z_relative);
-      const x_left_entrance = x_center_world - fence.entranceWidth_world / 2;
-      const x_right_entrance = x_center_world + fence.entranceWidth_world / 2;
-      const x_left_screen = canvas.width / 2 + f * x_left_entrance / z_relative;
-      const x_right_screen = canvas.width / 2 + f * x_right_entrance / z_relative;
-      ctx.beginPath();
-      ctx.moveTo(0, y_screen);
-      ctx.lineTo(x_left_screen, y_screen);
-      ctx.moveTo(x_right_screen, y_screen);
-      ctx.lineTo(canvas.width, y_screen);
-      ctx.strokeStyle = 'brown';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  });
-}
-
-function drawBicycle() {
-  ctx.beginPath();
-  ctx.arc(x_bicycle, y_bicycle, 10, 0, Math.PI * 2); // Wheel
-  ctx.moveTo(x_bicycle, y_bicycle - 20);
-  ctx.lineTo(x_bicycle, y_bicycle); // Mime
-  ctx.strokeStyle = 'black';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-}
-
-function update() {
-  z_offset += speed;
-  // Add input handling, e.g., arrow keys to adjust x_bicycle
-}
-
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawLane();
-  drawFences();
-  drawBicycle();
-  update();
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
 /*
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -282,3 +193,177 @@ document.getElementById('startButton').addEventListener('click', () => {
 showLandingModal();
 
 */
+
+
+// game.js
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Constants for perspective projection
+const z_near = 10;
+const f = 200;
+const amplitude = 100;
+const frequency = 0.05;
+const laneWidth_world = 50;
+const speed = 0.5;
+const y_bicycle = canvas.height * 0.8;
+const z_bicycle = (z_near * canvas.height) / y_bicycle;
+
+// Create lane and bicycle instances
+const lane = new Lane(canvas, ctx, laneWidth_world, z_near, f, amplitude, frequency);
+const bicycle = new Bicycle(canvas, ctx, y_bicycle, z_near, f);
+
+// Create fences at regular intervals
+const fenceInterval = 50; // z-distance between fences
+const numFences = 20; // Number of fences to generate
+const fences = Array.from({ length: numFences }, (_, i) => new Fence(i * fenceInterval, 40, lane));
+
+// Game state variables
+let z_offset = 0;
+let elapsedTime = 0;
+let gameInterval;
+let timerInterval;
+let isGameRunning = false;
+
+// Timestamp element
+const timeStamp = document.getElementById('timeStamp');
+
+// Modal elements
+const gameOverModal = document.getElementById('gameOverModal');
+const gameOverMessage = document.getElementById('gameOverMessage');
+const landingModal = document.getElementById('landingModal');
+const startButton = document.getElementById('startButton');
+const resetButton = document.getElementById('resetButton');
+
+// Input handling
+let leftPressed = false;
+let rightPressed = false;
+const moveSpeed = 1; // Adjust this value to control movement speed
+
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'ArrowLeft') leftPressed = true;
+    else if (event.code === 'ArrowRight') rightPressed = true;
+});
+
+document.addEventListener('keyup', (event) => {
+    if (event.code === 'ArrowLeft') leftPressed = false;
+    else if (event.code === 'ArrowRight') rightPressed = false;
+});
+
+canvas.addEventListener('touchstart', (event) => {
+    const touchX = event.touches[0].clientX;
+    if (touchX < canvas.width / 2) leftPressed = true;
+    else rightPressed = true;
+});
+
+canvas.addEventListener('touchend', () => {
+    leftPressed = false;
+    rightPressed = false;
+});
+
+// Game loop
+function updateGame() {
+    if (!isGameRunning) return;
+
+    // Update z_offset to simulate forward motion
+    z_offset += speed;
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Update and draw the lane
+    lane.update(speed);
+    lane.draw();
+
+    // Draw fences that are on screen
+    fences.forEach(fence => {
+        const z_relative = fence.z_fence - z_offset;
+        if (z_relative >= z_near) {
+            fence.draw(ctx, z_offset, z_near, f, canvas);
+        }
+    });
+
+    // Update bicycle position based on input
+    let delta = 0;
+    if (leftPressed) delta -= moveSpeed;
+    if (rightPressed) delta += moveSpeed;
+    bicycle.update(delta, lane);
+
+    // Draw the bicycle
+    bicycle.draw();
+
+    // Check for collisions
+    checkCollisions();
+
+    // Update score display
+    timeStamp.innerText = `Time: ${elapsedTime}s`;
+}
+
+// Collision detection
+function checkCollisions() {
+    // Check if bicycle is within lane boundaries at its z position
+    const x_center_world = amplitude * Math.sin(frequency * z_bicycle);
+    const x_left_world = x_center_world - laneWidth_world / 2;
+    const x_right_world = x_center_world + laneWidth_world / 2;
+    if (bicycle.x_bicycle_world < x_left_world || bicycle.x_bicycle_world > x_right_world) {
+        gameOver();
+    }
+
+    // Check for fence collisions
+    fences.forEach(fence => {
+        if (fence.checkCollision(bicycle, z_offset, z_near, canvas)) {
+            gameOver();
+        }
+    });
+}
+
+// Game over function
+function gameOver() {
+    clearInterval(timerInterval);
+    isGameRunning = false;
+    gameOverMessage.innerText = `You lasted ${elapsedTime} seconds.`;
+    gameOverModal.style.display = 'block';
+}
+
+// Start game function
+function startGame() {
+    if (!isGameRunning) {
+        timeStamp.style.display = 'block';
+        elapsedTime = 0;
+        z_offset = 0;
+        bicycle.x_bicycle_world = 0;
+        isGameRunning = true;
+        timerInterval = setInterval(() => {
+            if (isGameRunning) elapsedTime++;
+        }, 1000);
+        gameLoop();
+    }
+}
+
+// Reset game function
+function resetGame() {
+    gameOverModal.style.display = 'none';
+    startGame();
+}
+
+// Game loop using requestAnimationFrame
+function gameLoop() {
+    if (isGameRunning) {
+        updateGame();
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+// Modal event listeners
+startButton.addEventListener('click', () => {
+    landingModal.style.display = 'none';
+    startGame();
+});
+
+resetButton.addEventListener('click', resetGame);
+
+// Show landing modal on load
+landingModal.style.display = 'block';
