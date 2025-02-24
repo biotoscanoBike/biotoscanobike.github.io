@@ -1,3 +1,5 @@
+
+/*
 class Lane {
     constructor(canvas, ctx, laneWidth) {
         this.canvas = canvas;
@@ -90,5 +92,45 @@ class Lane {
     draw() {
         this.ctx.drawImage(this.offscreenCanvas, 0, this.laneOffsetY);
         this.ctx.drawImage(this.offscreenCanvas, 0, this.laneOffsetY - this.canvas.height);
+    }
+}
+*/
+
+class Lane {
+    constructor(canvas, ctx, laneWidth_world, z_near, f, amplitude, frequency) {
+        this.canvas = canvas;
+        this.ctx = ctx;
+        this.laneWidth_world = laneWidth_world;
+        this.z_near = z_near;
+        this.f = f;
+        this.amplitude = amplitude;
+        this.frequency = frequency;
+        this.z_offset = 0;
+    }
+
+    draw() {
+        this.ctx.beginPath();
+        const left_points = [];
+        const right_points = [];
+        for (let y = 1; y <= this.canvas.height; y++) {
+            const z = (this.z_near * this.canvas.height) / y + this.z_offset;
+            const x_center_world = this.amplitude * Math.sin(this.frequency * z);
+            const x_left_world = x_center_world - this.laneWidth_world / 2;
+            const x_right_world = x_center_world + this.laneWidth_world / 2;
+            const x_left_screen = this.canvas.width / 2 + this.f * x_left_world / z;
+            const x_right_screen = this.canvas.width / 2 + this.f * x_right_world / z;
+            left_points.push([x_left_screen, y]);
+            right_points.push([x_right_screen, y]);
+        }
+        this.ctx.moveTo(...left_points[0]);
+        left_points.forEach(p => this.ctx.lineTo(...p));
+        for (let i = right_points.length - 1; i >= 0; i--) this.ctx.lineTo(...right_points[i]);
+        this.ctx.closePath();
+        this.ctx.fillStyle = 'gray';
+        this.ctx.fill();
+    }
+
+    update(speed) {
+        this.z_offset += speed;
     }
 }
