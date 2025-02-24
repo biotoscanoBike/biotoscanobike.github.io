@@ -1,4 +1,93 @@
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 800;
+canvas.height = 600;
 
+const z_near = 10;
+const f = 200;
+const amplitude = 100;
+const frequency = 0.05;
+const laneWidth_world = 50;
+let z_offset = 0;
+const speed = 0.5;
+const y_bicycle = canvas.height * 0.8;
+let x_bicycle = canvas.width / 2;
+
+const fences = Array.from({ length: 20 }, (_, i) => ({
+  z_fence: i * 50,
+  entranceWidth_world: 40
+}));
+
+function drawLane() {
+  ctx.beginPath();
+  const left_points = [];
+  const right_points = [];
+  for (let y = 1; y <= canvas.height; y++) {
+    const z = (z_near * canvas.height) / y + z_offset;
+    const x_center_world = amplitude * Math.sin(frequency * z);
+    const x_left_world = x_center_world - laneWidth_world / 2;
+    const x_right_world = x_center_world + laneWidth_world / 2;
+    const x_left_screen = canvas.width / 2 + f * x_left_world / z;
+    const x_right_screen = canvas.width / 2 + f * x_right_world / z;
+    left_points.push([x_left_screen, y]);
+    right_points.push([x_right_screen, y]);
+  }
+  ctx.moveTo(...left_points[0]);
+  left_points.forEach(p => ctx.lineTo(...p));
+  for (let i = right_points.length - 1; i >= 0; i--) ctx.lineTo(...right_points[i]);
+  ctx.closePath();
+  ctx.fillStyle = 'gray';
+  ctx.fill();
+}
+
+function drawFences() {
+  fences.forEach(fence => {
+    const z_relative = fence.z_fence - z_offset;
+    if (z_relative < z_near) return;
+    const y_screen = (z_near * canvas.height) / z_relative;
+    if (y_screen > 0 && y_screen < canvas.height) {
+      const x_center_world = amplitude * Math.sin(frequency * z_relative);
+      const x_left_entrance = x_center_world - fence.entranceWidth_world / 2;
+      const x_right_entrance = x_center_world + fence.entranceWidth_world / 2;
+      const x_left_screen = canvas.width / 2 + f * x_left_entrance / z_relative;
+      const x_right_screen = canvas.width / 2 + f * x_right_entrance / z_relative;
+      ctx.beginPath();
+      ctx.moveTo(0, y_screen);
+      ctx.lineTo(x_left_screen, y_screen);
+      ctx.moveTo(x_right_screen, y_screen);
+      ctx.lineTo(canvas.width, y_screen);
+      ctx.strokeStyle = 'brown';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  });
+}
+
+function drawBicycle() {
+  ctx.beginPath();
+  ctx.arc(x_bicycle, y_bicycle, 10, 0, Math.PI * 2); // Wheel
+  ctx.moveTo(x_bicycle, y_bicycle - 20);
+  ctx.lineTo(x_bicycle, y_bicycle); // Mime
+  ctx.strokeStyle = 'black';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function update() {
+  z_offset += speed;
+  // Add input handling, e.g., arrow keys to adjust x_bicycle
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawLane();
+  drawFences();
+  drawBicycle();
+  update();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
 /*
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
